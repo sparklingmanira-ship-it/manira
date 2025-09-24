@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manira Demo: Customer & Admin Module</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Fonts and Tailwind (reuse from your main site for look consistency) -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { font-family: 'Montserrat', Arial, sans-serif; background: #f6f8fb; }
+    h1, h2, h3, .brand-name { font-family: 'Playfair Display', serif!important; }
+    .brand-name { font-size: 2rem; font-weight: 800; }
+    /* ... (You can reuse the animation CSS from your main file here) ... */
+    .btn { @apply bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700 transition; }
+    .input { @apply border p-2 rounded w-full mb-2; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <nav class="container mx-auto flex justify-between items-center py-4">
+    <span class="brand-name text-blue-dark">Manira</span>
+    <div id="nav-links">
+      <!-- Links are dynamically updated based on login role -->
+    </div>
+  </nav>
+</header>
+
+<main class="container mx-auto py-6" id="main-content">
+
+  <!-- Login Section (hidden after login) -->
+  <section id="login-section" class="max-w-md mx-auto bg-white rounded shadow p-6 mt-12 text-center">
+    <h2 class="text-2xl font-bold mb-4">Login</h2>
+    <div>
+      <button id="google-login-btn" class="btn mb-4">Login with Google</button>
+      <!-- Optionally, you can add email/password demo login here -->
+      <p class="text-gray-500 text-sm">Use Google login. Admin: sparkling.manira@gmail.com</p>
+    </div>
+  </section>
+
+  <!-- Customer Dashboard (hidden unless customer logged in) -->
+  <section id="customer-dashboard" class="hidden">
+    <h2 class="text-2xl font-bold mb-4">Welcome, <span id="customer-name"></span>!</h2>
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold mb-2">Your Profile</h3>
+      <div><b>Email:</b> <span id="customer-email"></span></div>
+    </div>
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold mb-2">Product Catalogue</h3>
+      <div id="catalogue-products" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Products will be rendered here -->
+      </div>
+    </div>
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold mb-2">Your Cart</h3>
+      <div id="cart-products" class="mb-2"></div>
+      <button class="btn" id="place-order-btn">Place Order</button>
+      <p id="cart-message" class="text-green-700 font-semibold mt-2 hidden"></p>
+    </div>
+    <div>
+      <h3 class="text-lg font-semibold mb-2">Your Orders</h3>
+      <div id="customer-orders"></div>
+    </div>
+  </section>
+
+  <!-- Admin Dashboard (hidden unless admin logged in) -->
+  <section id="admin-dashboard" class="hidden">
+    <h2 class="text-2xl font-bold mb-4">Admin Dashboard</h2>
+    <h3 class="text-lg font-semibold mb-2">All Orders</h3>
+    <div id="admin-orders"></div>
+  </section>
+
+</main>
+
+<script>
+  // --- Demo Product Data (replace with your real product data as needed) ---
+  const PRODUCTS = [
+    {sku: "R-01", name: "White Diamond Ring", price: 1499, img: "uploaded:image.png-ec1ed7d0-a40a-4b51-9871-1f120d1a283f"},
+    {sku: "R-02", name: "Pink Stone Ring", price: 1699, img: "uploaded:image.png-d7c0b9f7-5ae5-4e3c-93dd-6b4da3bdc47f"},
+    {sku: "R-03", name: "Blue Diamond Ring", price: 1899, img: "uploaded:image.png-21c991ba-0e6d-4266-b726-ebc62f498a0d"},
+    {sku: "S-01", name: "Necklace and Earring Set", price: 3500, img: "uploaded:image.png-e4ab2596-04b6-42b8-99f9-8ad3efd2bd0c"},
+    {sku: "E-01", name: "Green Diamond Earrings", price: 1199, img: "uploaded:image.png-734ffca9-1274-483f-9c93-fd2f14f8fd6b"},
+    {sku: "R-04", name: "White Diamond Cluster Ring", price: 1999, img: "uploaded:image.png-bc6c940b-3795-45bb-a074-77bfd64f7b96"}
+  ];
+  const ADMIN_EMAIL = "sparkling.manira@gmail.com";
+  let currentUser = null; // {email, name, isAdmin}
+  let cart = [];
+
+  // ----------- Google Login -----------
+  function showSection(id) {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('customer-dashboard').classList.add('hidden');
+    document.getElementById('admin-dashboard').classList.add('hidden');
+    if (id) document.getElementById(id).classList.remove('hidden');
+  }
+  document.getElementById('google-login-btn').onclick = () => {
+    window.google.accounts.id.initialize({
+      client_id: "YOUR_GOOGLE_CLIENT_ID_HERE", // <-- replace with your client id
+      callback: handleGoogleLogin
+    });
+    window.google.accounts.id.prompt();
+  };
+  function handleGoogleLogin(response) {
+    // Parse JWT
+    function parseJwt(token) {
+      let base64Url = token.split('.')[1];
+      let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    }
+    const info = parseJwt(response.credential);
+    currentUser = {
+      name: info.name,
+      email: info.email,
+      isAdmin: info.email.toLowerCase() === ADMIN_EMAIL
+    };
+    localStorage.setItem("maniraDemoUser", JSON.stringify(currentUser));
+    loadApp();
+  }
+
+  // ----------- Cart Logic -----------
+  function addToCart(sku) {
+    cart.push(sku);
+    localStorage.setItem("maniraDemoCart_"+currentUser.email, JSON.stringify(cart));
+    renderCart();
+  }
+  function removeFromCart(sku) {
+    cart = cart.filter(s => s !== sku);
+    localStorage.setItem("maniraDemoCart_"+currentUser.email, JSON.stringify(cart));
+    renderCart();
+  }
+  function clearCart() {
+    cart = [];
+    localStorage.removeItem("maniraDemoCart_"+currentUser.email);
+    renderCart();
+  }
+  function renderCart() {
+    const cartDiv = document.getElementById('cart-products');
+    if (!cartDiv) return;
+    if (cart.length === 0) { cartDiv.innerHTML = '<i>Your cart is empty.</i>'; return; }
+    cartDiv.innerHTML = cart.map(sku => {
+      const p = PRODUCTS.find(pr => pr.sku === sku);
+      return `<div class="flex items-center mb-2">
+        <img src="${p.img}" alt="${p.name}" class="w-12 h-12 rounded mr-2"/>
+        <span>${p.name} - ₹${p.price}</span>
+        <button class="ml-3 text-red-600" onclick="removeFromCart('${sku}')">&times;</button>
+      </div>`;
+    }).join('');
+  }
+
+  // ----------- Order Logic -----------
+  function placeOrder() {
+    if (!cart.length) return;
+    const order = {
+      id: 'ORD' + Date.now(),
+      user: {name: currentUser.name, email: currentUser.email},
+      items: cart.map(sku => PRODUCTS.find(p => p.sku === sku)),
+      time: new Date().toLocaleString(),
+      status: 'Placed'
+    };
+    // Save order for both admin and user
+    let allOrders = JSON.parse(localStorage.getItem("maniraDemoOrders")||"[]");
+    allOrders.push(order);
+    localStorage.setItem("maniraDemoOrders", JSON.stringify(allOrders));
+    let myOrders = JSON.parse(localStorage.getItem("maniraDemoUserOrders_" + currentUser.email) || "[]");
+    myOrders.push(order);
+    localStorage.setItem("maniraDemoUserOrders_" + currentUser.email, JSON.stringify(myOrders));
+    clearCart();
+    document.getElementById('cart-message').innerText = "Order placed! Admin will contact you soon.";
+    document.getElementById('cart-message').classList.remove('hidden');
+    renderMyOrders();
+    setTimeout(() => document.getElementById('cart-message').classList.add('hidden'), 2500);
+  }
+
+  // ----------- Render Products -----------
+  function renderProducts() {
+    const catDiv = document.getElementById('catalogue-products');
+    if (!catDiv) return;
+    catDiv.innerHTML = PRODUCTS.map(p => `
+      <div class="bg-white rounded shadow p-4 flex flex-col items-center">
+        <img src="${p.img}" alt="${p.name}" class="w-32 h-32 object-cover rounded mb-2">
+        <div class="font-semibold">${p.name}</div>
+        <div class="mb-2">₹${p.price}</div>
+        <button class="btn" onclick="addToCart('${p.sku}')">Add to Cart</button>
+      </div>
+    `).join('');
+  }
+
+  // ----------- Render My Orders -----------
+  function renderMyOrders() {
+    const orderDiv = document.getElementById('customer-orders');
+    if (!orderDiv) return;
+    let myOrders = JSON.parse(localStorage.getItem("maniraDemoUserOrders_" + currentUser.email) || "[]");
+    if (!myOrders.length) { orderDiv.innerHTML = "<i>No orders yet.</i>"; return; }
+    orderDiv.innerHTML = myOrders.reverse().map(order => `
+      <div class="bg-blue-50 rounded p-3 mb-3">
+        <b>Order #${order.id}</b> <span class="text-xs text-gray-500">${order.time}</span><br>
+        ${order.items.map(i => `${i.name} (₹${i.price})`).join(', ')}
+        <div>Status: <b>${order.status}</b></div>
+      </div>
+    `).join('');
+  }
+
+  // ----------- Render Admin Orders -----------
+  function renderAdminOrders() {
+    const adminDiv = document.getElementById('admin-orders');
+    if (!adminDiv) return;
+    let allOrders = JSON.parse(localStorage.getItem("maniraDemoOrders") || "[]");
+    if (!allOrders.length) { adminDiv.innerHTML = "<i>No orders yet.</i>"; return; }
+    adminDiv.innerHTML = allOrders.reverse().map(order => `
+      <div class="bg-white rounded p-4 mb-3 shadow">
+        <b>Order #${order.id}</b> <span class="text-xs text-gray-500">${order.time}</span>
+        <div><b>Customer:</b> ${order.user.name} &lt;${order.user.email}&gt;</div>
+        <div><b>Items:</b> ${order.items.map(i => `${i.name} (₹${i.price})`).join(', ')}</div>
+        <div><b>Status:</b> ${order.status}</div>
+        <button class="btn mt-2" onclick="alert('Contact ${order.user.name} at ${order.user.email}')">Contact Buyer</button>
+      </div>
+    `).join('');
+  }
+
+  // ----------- Navigation and App Loader -----------
+  function loadApp() {
+    // Update nav
+    const nav = document.getElementById('nav-links');
+    nav.innerHTML = `
+      <span>Hi, ${currentUser.name.split(' ')[0]}</span>
+      <button class="ml-2 btn" onclick="logout()">Logout</button>
+    `;
+    // Show dashboard
+    if (currentUser.isAdmin) {
+      showSection('admin-dashboard');
+      renderAdminOrders();
+    } else {
+      showSection('customer-dashboard');
+      document.getElementById('customer-name').innerText = currentUser.name;
+      document.getElementById('customer-email').innerText = currentUser.email;
+      cart = JSON.parse(localStorage.getItem("maniraDemoCart_"+currentUser.email)||"[]");
+      renderProducts();
+      renderCart();
+      renderMyOrders();
+      document.getElementById('place-order-btn').onclick = placeOrder;
+    }
+  }
+  function logout() {
+    localStorage.removeItem("maniraDemoUser");
+    location.reload();
+  }
+
+  // ----------- On Page Load -----------
+  window.addEventListener('DOMContentLoaded', function() {
+    // Attach global functions
+    window.addToCart = addToCart;
+    window.removeFromCart = removeFromCart;
+    window.placeOrder = placeOrder;
+    // Restore login from localStorage
+    const saved = localStorage.getItem("maniraDemoUser");
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      loadApp();
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manira - Product Catalogue</title>
+  <!-- Google Fonts: Playfair Display for headings, Montserrat for body -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Montserrat', Arial, sans-serif;
+      background-color: #f6f8fb;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .text-blue-dark { color: #2c4263; }
+    .bg-blue-light { background-color: #e6f0ff; }
+    /* Fade-in-up animation for product cards */
+    .product-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      opacity: 0;
+      transform: translateY(40px);
+      animation: fadeInUp 0.7s cubic-bezier(.7,.2,.17,1) forwards;
+    }
+    .product-card:nth-child(1) { animation-delay: 0.1s;}
+    .product-card:nth-child(2) { animation-delay: 0.2s;}
+    .product-card:nth-child(3) { animation-delay: 0.3s;}
+    .product-card:nth-child(4) { animation-delay: 0.4s;}
+    .product-card:nth-child(5) { animation-delay: 0.5s;}
+    .product-card:nth-child(6) { animation-delay: 0.6s;}
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .product-card:hover {
+      transform: translateY(-5px) scale(1.03);
+      box-shadow: 0 14px 28px rgba(44,66,99,0.13);
+    }
+    .brand-logo { max-width: 200px; margin-bottom: 1rem; }
+    .brand-logo-container {
+      display: flex; justify-content: center; align-items: center; padding: 2rem;
+    }
+    /* Banner slide in */
+    .banner-new {
+      background: linear-gradient(90deg, #e6f0ff 0%, #b8d1fa 100%);
+      color: #2c4263;
+      font-weight: 700;
+      font-size: 1.5rem;
+      border-radius: 0.75rem;
+      padding: 1rem 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      box-shadow: 0 4px 16px 0 rgba(44, 66, 99, 0.07);
+      opacity: 0;
+      transform: translateY(-30px);
+      animation: bannerSlideIn 0.8s cubic-bezier(.7,.2,.17,1) 0.2s forwards;
+    }
+    @keyframes bannerSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .banner-new .sparkle {
+      font-size: 2rem;
+      animation: sparkle 1.2s infinite alternate;
+    }
+    @keyframes sparkle {
+      to { filter: brightness(1.5); transform: scale(1.15) rotate(-10deg);}
+    }
+    /* Headings: Playfair Display */
+    h1, h2, h3, .brand-name, .playfair {
+      font-family: 'Playfair Display', serif !important;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    /* Extra bold for main title */
+    h1, .main-title {
+      font-weight: 800 !important;
+    }
+    /* Logo text with Playfair Display and shimmer */
+    .brand-name {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(90deg,#2c4263 40%,#a1b8da 60%,#2c4263 80%);
+      background-size: 200% 100%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: shineTitle 3s linear infinite;
+    }
+    @keyframes shineTitle {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    /* Shine for headings */
+    h2, .main-title {
+      position:relative;
+      overflow:hidden;
+    }
+    h2::after, .main-title::after {
+      content:"";
+      position:absolute;
+      top:0; left:-75%;
+      width:50%; height:100%;
+      background: linear-gradient(100deg,rgba(255,255,255,0) 60%,rgba(255,255,255,0.6) 90%,rgba(255,255,255,0) 100%);
+      transform: skewX(-12deg);
+      animation: headingShine 2.5s infinite;
+      pointer-events:none;
+    }
+    @keyframes headingShine {
+      0% { left: -75%; }
+      60% { left: 130%; }
+      100% { left: 130%; }
+    }
+    /* Body text remains Montserrat */
+    p, span, label, input, select, textarea, button, li, a {
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+    /* Button hover animation */
+    .animated-btn, button, .call-btn {
+      transition: box-shadow 0.3s, background 0.3s, transform 0.2s;
+    }
+    .animated-btn:hover, button:hover, .call-btn:hover {
+      box-shadow: 0 0 0 3px #b8d1fa, 0 6px 16px #2c426366;
+      background: #a1b8da;
+      color: #fff !important;
+      transform: scale(1.04);
+    }
+  </style>
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <!-- Header Section -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="container mx-auto flex justify-between items-center py-4 px-6 md:px-8">
+      <a href="#home" class="flex items-center space-x-2">
+        <img src="uploaded:image.png-847418f4-bc4d-49f7-b331-67e419081df0" alt="Manira Logo" class="w-12 h-12 rounded-lg">
+        <span class="brand-name text-blue-dark">Manira</span>
+      </a>
+      <div class="flex space-x-4 md:space-x-6">
+        <a href="#catalogue" class="text-gray-600 hover:text-blue-dark font-semibold transition-colors duration-300">Catalogue</a>
+        <a href="#contact" class="text-gray-600 hover:text-blue-dark font-semibold transition-colors duration-300">Contact</a>
+        <a href="#admin" class="text-gray-600 hover:text-blue-dark font-semibold transition-colors duration-300">Admin</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Brand Page Section -->
+  <section id="home" class="bg-blue-light py-20 px-6 md:px-8">
+    <div class="container mx-auto text-center">
+      <div class="brand-logo-container">
+        <img src="uploaded:image.png-847418f4-bc4d-49f7-b331-67e419081df0" alt="Manira Logo" class="brand-logo">
+      </div>
+      <h1 class="main-title text-5xl md:text-6xl text-blue-dark">Manira</h1>
+      <p class="text-2xl md:text-3xl font-light italic mt-4 mb-8 text-gray-700">Sparkle Beyond Time</p>
+      <p class="max-w-3xl mx-auto text-lg md:text-xl leading-relaxed text-gray-800">
+        Manira is a contemporary brand specializing in exquisite AD (American Diamond) jewellery that brings unmatched sparkle and elegance to every collection. Our craftsmanship is dedicated to creating timeless pieces that enhance your natural radiance and celebrate your unique style. At Manira, we believe jewellery is more than an accessory—it's an expression of your personality and a symbol of special moments. With meticulous attention to detail and a commitment to quality, Manira offers dazzling designs that let you shine bright and stand out with distinction. Our tagline, such as "Manira: Sparkle Beyond Time," reflects our promise to deliver beauty and brilliance that lasts forever.
+      </p>
+    </div>
+  </section>
+
+  <!-- New Arrivals Banner -->
+  <div class="container">
+    <div class="banner-new" id="new-arrivals-banner">
+      <span class="sparkle">✨</span>
+      <span>New Arrivals Just Dropped! Discover our latest sparkling AD jewellery pieces.</span>
+      <span class="sparkle">✨</span>
+    </div>
+  </div>
+
+  <!-- Catalogue Section -->
+  <section id="catalogue" class="py-20 px-6 md:px-8">
+    <div class="container mx-auto">
+      <h2 class="text-4xl font-bold text-center text-blue-dark mb-12">Product Catalogue</h2>
+      <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        <!-- Product Cards ... (existing cards remain here) -->
+        <div class="product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+          <img src="uploaded:image.png-ec1ed7d0-a40a-4b51-9871-1f120d1a283f" alt="White Diamond Ring" class="w-full h-auto rounded-lg mb-4 object-cover">
+          <div class="text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: R-01</h3>
+            <p class="text-gray-600 mb-1">Category: Rings</p>
+            <p class="text-gray-500 text-sm italic mb-2">Description: Classic white AD ring with a delicate floral design.</p>
+            <p class="text-blue-dark font-bold text-2xl">₹1499</p>
+          </div>
+        </div>
+        <div class="product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+          <img src="uploaded:image.png-d7c0b9f7-5ae5-4e3c-93dd-6b4da3bdc47f" alt="Pink Stone Ring" class="w-full h-auto rounded-lg mb-4 object-cover">
+          <div class="text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: R-02</h3>
+            <p class="text-gray-600 mb-1">Category: Rings</p>
+            <p class="text-gray-500 text-sm italic mb-2">Description: A stunning ring with sparkling pink and white AD stones.</p>
+            <p class="text-blue-dark font-bold text-2xl">₹1699</p>
+          </div>
+        </div>
+        <div class="product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+          <img src="uploaded:image.png-21c991ba-0e6d-4266-b726-ebc62f498a0d" alt="Blue Diamond Ring" class="w-full h-auto rounded-lg mb-4 object-cover">
+          <div class="text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: R-03</h3>
+            <p class="text-gray-600 mb-1">Category: Rings</p>
+            <p class="text-gray-500 text-sm italic mb-2">Description: A statement ring featuring brilliant blue and white AD stones.</p>
+            <p class="text-blue-dark font-bold text-2xl">₹1899</p>
+          </div>
+        </div>
+        <div class="product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+          <img src="uploaded:image.png-e4ab2596-04b6-42b8-99f9-8ad3efd2bd0c" alt="Necklace and Earring Set" class="w-full h-auto rounded-lg mb-4 object-cover">
+          <div class="text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: S-01</h3>
+            <p class="text-gray-600 mb-1">Category: Sets</p>
+            <p class="text-gray-500 text-sm italic mb-2">Description: An elegant AD necklace and earring set with a sapphire-like pendant.</p>
+            <p class="text-blue-dark font-bold text-2xl">₹3500</p>
+          </div>
+        </div>
+        <div class="product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+          <img src="uploaded:image.png-734ffca9-1274-483f-9c93-fd2f14f8fd6b" alt="Green Diamond Earrings" class="w-full h-auto rounded-lg mb-4 object-cover">
+          <div class="text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: E-01</h3>
+            <p class="text-gray-600 mb-1">Category: Earrings</p>
+            <p class="text-gray-500 text-sm italic mb-2">Description: Dazzling AD stud earrings with a central emerald-like stone.</p>
+            <p class="text-blue-dark font-bold text-2xl">₹1199</p>
+          </div>
+        </div>
+        <div class="product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+          <img src="uploaded:image.png-bc6c940b-3795-45bb-a074-77bfd64f7b96" alt="White Diamond Cluster Ring" class="w-full h-auto rounded-lg mb-4 object-cover">
+          <div class="text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: R-04</h3>
+            <p class="text-gray-600 mb-1">Category: Rings</p>
+            <p class="text-gray-500 text-sm italic mb-2">Description: An ornate cluster ring for maximum sparkle and brilliance.</p>
+            <p class="text-blue-dark font-bold text-2xl">₹1999</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Admin Upload Page (with Google login authentication) -->
+  <section id="admin" class="py-20 px-6 md:px-8 min-h-screen bg-blue-light">
+    <div class="container mx-auto max-w-xl bg-white rounded-xl shadow-lg p-8 mt-8">
+      <h2 class="text-3xl font-bold text-blue-dark mb-6 text-center">Admin: Upload New Product</h2>
+      <!-- Google Sign-In button and user info -->
+      <div id="g_id_signin"></div>
+      <div id="admin-user-info" class="text-center mb-6 hidden">
+        <p class="text-blue-dark font-semibold" id="admin-user-email"></p>
+        <button onclick="signOut()" class="mt-2 bg-gray-200 text-gray-800 px-4 py-1 rounded hover:bg-gray-300 text-sm animated-btn">Sign Out</button>
+      </div>
+
+      <!-- Admin Form: hidden until authenticated -->
+      <form id="admin-upload-form" class="space-y-6 hidden">
+        <div>
+          <label for="sku" class="block text-gray-700 font-semibold mb-2">SKU</label>
+          <input type="text" id="sku" name="sku" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+        <div>
+          <label for="category" class="block text-gray-700 font-semibold mb-2">Category</label>
+          <select id="category" name="category" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+            <option value="Rings">Rings</option>
+            <option value="Earrings">Earrings</option>
+            <option value="Sets">Sets</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="description" class="block text-gray-700 font-semibold mb-2">Description</label>
+          <textarea id="description" name="description" rows="3" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"></textarea>
+        </div>
+        <div>
+          <label for="price" class="block text-gray-700 font-semibold mb-2">Price (₹)</label>
+          <input type="number" id="price" name="price" required min="0" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+        <div>
+          <label for="image" class="block text-gray-700 font-semibold mb-2">Image (URL)</label>
+          <input type="url" id="image" name="image" placeholder="https://..." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+        <button type="submit" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-full shadow-lg animated-btn">
+          Upload Product
+        </button>
+        <p id="admin-form-msg" class="text-center text-green-600 font-medium mt-4 hidden">Product added to catalogue!</p>
+      </form>
+      <!-- Access denied message -->
+      <div id="admin-access-denied" class="text-center p-6 text-red-600 font-bold hidden">
+        Access Denied. You must sign in with an authorized admin Google account.
+      </div>
+    </div>
+    <script>
+      // --- Google Login Setup ---
+      let adminEmail = "sparkling.manira@gmail.com"; // <-- ADMIN EMAIL SET HERE
+      let googleClientId = "YOUR_GOOGLE_CLIENT_ID_HERE"; // <-- REPLACE WITH YOUR GOOGLE CLIENT ID
+
+      window.onload = function () {
+        if (window.google && window.google.accounts && window.google.accounts.id) {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: handleCredentialResponse
+          });
+          window.google.accounts.id.renderButton(
+            document.getElementById("g_id_signin"),
+            { theme: "outline", size: "large", width: 300 }
+          );
+        } else {
+          setTimeout(window.onload, 500);
+        }
+      };
+
+      function handleCredentialResponse(response) {
+        function parseJwt (token) {
+          let base64Url = token.split('.')[1];
+          let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          return JSON.parse(jsonPayload);
+        }
+        let data = parseJwt(response.credential);
+        let email = data.email;
+        document.getElementById('g_id_signin').style.display = 'none';
+        document.getElementById('admin-user-info').classList.remove('hidden');
+        document.getElementById('admin-user-email').innerText = "Signed in as: " + email;
+        if (email.toLowerCase() === adminEmail.toLowerCase()) {
+          document.getElementById('admin-upload-form').classList.remove('hidden');
+          document.getElementById('admin-access-denied').classList.add('hidden');
+        } else {
+          document.getElementById('admin-upload-form').classList.add('hidden');
+          document.getElementById('admin-access-denied').classList.remove('hidden');
+        }
+      }
+      function signOut() {
+        document.getElementById('g_id_signin').style.display = '';
+        document.getElementById('admin-user-info').classList.add('hidden');
+        document.getElementById('admin-upload-form').classList.add('hidden');
+        document.getElementById('admin-access-denied').classList.add('hidden');
+      }
+
+      // Add product to catalogue (existing code)
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('admin-upload-form');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const sku = document.getElementById('sku').value.trim();
+          const category = document.getElementById('category').value;
+          const description = document.getElementById('description').value.trim();
+          const price = document.getElementById('price').value;
+          const image = document.getElementById('image').value.trim() || 'https://via.placeholder.com/400x300?text=No+Image';
+          const card = document.createElement('div');
+          card.className = "product-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center";
+          card.innerHTML = `
+            <img src="${image}" alt="${sku} Image" class="w-full h-auto rounded-lg mb-4 object-cover">
+            <div class="text-center">
+              <h3 class="text-xl font-semibold text-gray-800 mb-2">SKU: ${sku}</h3>
+              <p class="text-gray-600 mb-1">Category: ${category}</p>
+              <p class="text-gray-500 text-sm italic mb-2">Description: ${description}</p>
+              <p class="text-blue-dark font-bold text-2xl">₹${price}</p>
+            </div>
+          `;
+          document.getElementById('product-list').prepend(card);
+          const msg = document.getElementById('admin-form-msg');
+          msg.classList.remove('hidden');
+          setTimeout(()=>{ msg.classList.add('hidden'); }, 2500);
+          e.target.reset();
+          window.location.hash = "#catalogue";
+        });
+      });
+    </script>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="bg-gray-800 text-white py-20 px-6 md:px-8">
+    <div class="container mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-8">Get in Touch</h2>
+      <p class="text-lg md:text-xl mb-4">For wholesale inquiries, collaborations, or to place an order, please contact us.</p>
+      <div class="space-y-4 text-center">
+        <p class="text-xl font-semibold">Brand Owner: Aarti Pradhan</p>
+        <a href="tel:+919819249977" class="inline-block bg-white text-gray-800 font-bold py-3 px-6 rounded-full shadow-lg call-btn">
+          Call Us: +91 9819249977
+        </a>
+        <p class="text-sm text-gray-400 mt-2">Tap to call directly from your mobile device.</p>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
